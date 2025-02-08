@@ -1,0 +1,68 @@
+import React, { useState } from "react";
+import MapSelector from "./components/MapSelector";
+import TerrainViewer from "./components/TerrainViewer";
+
+const fetchElevationData = async (selectedArea) => 
+  {
+      const { north: maxLat, south: minLat, east: maxLong, west: minLong } = selectedArea;
+      const meterToDegree = 0.000009;
+      const stepSizeLat = 10 * meterToDegree;
+      const stepSizeLongBase = 10 * meterToDegree;
+  
+      let interpolatedPoints = [];
+      let gridX = 0, gridY = 0;
+  
+      for (let lat = minLat; lat <= maxLat; lat += stepSizeLat) 
+      {
+          const stepSizeLong = stepSizeLongBase / Math.cos(lat * (Math.PI / 180));
+          let rowPoints = [];
+  
+          for (let lng = minLong; lng <= maxLong; lng += stepSizeLong) 
+          {
+              rowPoints.push({ lat, lng });
+          }
+  
+          if (gridX === 0) gridX = rowPoints.length; // Fix grid width
+          interpolatedPoints.push(...rowPoints);
+      }
+  
+      gridY = interpolatedPoints.length / gridX; // Fix grid height
+  
+      console.log(`Grid size: ${gridX} x ${gridY} (Total points: ${interpolatedPoints.length})`);
+  
+      const elevator = new window.google.maps.ElevationService();
+      const locations = interpolatedPoints.map(p => ({ lat: p.lat, lng: p.lng }));
+  
+      try 
+      {
+          const results = await elevator.getElevationForLocations({ locations });
+          return { results: results.results.map(res => res.elevation), gridX, gridY };
+      } 
+      catch (e) 
+      {
+          console.log("Cannot show elevation: request failed because " + e);
+          return null;
+      }
+  };
+
+function App() 
+{
+  const [elevationData, setElevationData] = useState(null);
+  const [planeSize, setPlaneSize] = useState({});
+  const [center, setCenter] = useState({});
+
+  const handleAreaSelect = async (selectedArea) => 
+  {
+    const elevations = await fetchElevationData(selectedArea);
+    setElevationData(elevations); // Pass grid size
+  };
+
+  return (
+    <div style={{width:"50vh", height:"50vw"}}>
+      <MapSelector onAreaSelect={handleAreaSelect} setPlaneSize={setPlaneSize} setCenter={setCenter} />
+      {elevationData && <TerrainViewer elevationData={elevationData} planeSize={planeSize} center={center}/>}
+    </div>
+  );
+}
+
+export default App;
