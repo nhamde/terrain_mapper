@@ -58,11 +58,16 @@ function App()
   };
 
   return (
-    <div style={{width:"50vh", height:"50vw"}}>
-      <MapSelector onAreaSelect={handleAreaSelect} setPlaneSize={setPlaneSize} setCenter={setCenter} />
-      {elevationData && <TerrainViewer elevationData={elevationData} planeSize={planeSize} center={center}/>}
+    <div style={{ display: "flex", flexDirection: "column", width: "100vw", height: "100vh" }}>
+      <div style={{ flex: 1, minHeight: "50%" }}>
+        <MapSelector onAreaSelect={handleAreaSelect} setPlaneSize={setPlaneSize} setCenter={setCenter} />
+      </div>
+      <div style={{ flex: 2, height: "50%" }}>
+        {elevationData && <TerrainViewer elevationData={elevationData} planeSize={planeSize} center={center} />}
+      </div>
     </div>
   );
+  
 }
 
 export default App;

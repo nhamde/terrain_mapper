@@ -1,6 +1,6 @@
 import React, { useState, useRef } from "react";
 import { GoogleMap, LoadScript, Rectangle } from "@react-google-maps/api";
-import { REACT_APP_GOOGLE_MAPS_API_KEY } from "../ApiKey";
+import { REACT_APP_GOOGLE_MAPS_API_KEY } from "./ApiKey";
 import { calculatePlaneSize } from "./Functionality";
 
 const libraries = ["drawing"]; // Load drawing tools

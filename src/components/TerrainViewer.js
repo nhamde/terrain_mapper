@@ -24,7 +24,7 @@ const TerrainViewer = ({ elevationData, planeSize, center }) =>
         // Scene Setup
         const scene = new THREE.Scene();
 
-        const renderer = new THREE.WebGLRenderer();
+        const renderer = new THREE.WebGLRenderer({antialias: true});
         renderer.setSize(500, 500);
         mountRef.current.appendChild(renderer.domElement);
 
@@ -53,10 +53,6 @@ const TerrainViewer = ({ elevationData, planeSize, center }) =>
             }
         } 
 
-        // geometry.attributes.position.needsUpdate = true;
-        // geometry.computeVertexNormals();
-
-        // Compute the center vertex (Average of all X, Y, Z)
         const avgX = sumX / numVertices;
         const avgY = sumY / numVertices;
         const avgZ = sumZ / numVertices;
@@ -64,9 +60,8 @@ const TerrainViewer = ({ elevationData, planeSize, center }) =>
 
         // Camera setup based on the center vertex
         const camera = new THREE.PerspectiveCamera(60, 1, 1, 5000);
-        const distance = Math.max(width, height) * 1.1; // Dynamic distance
-        camera.position.set(0, 0, 0); 
-        camera.lookAt(0, 0, 0); 
+        camera.position.set(0, 0, 3500); 
+        camera.lookAt(avgX, avgY, avgZ); 
 
         const minZ = 3540;
         const {finalVertices, finalIndices} = SurfaceExtruder(vertices, minZ, gridX, gridY);
@@ -77,30 +72,38 @@ const TerrainViewer = ({ elevationData, planeSize, center }) =>
 
 
         // Create a material and mesh
-        const material = new THREE.MeshStandardMaterial({ color: 0x88cc88, wireframe: false, side: THREE.DoubleSide});
+        const material = new THREE.MeshStandardMaterial  ({ color: 0x88cc88, roughness: 0.5, side: THREE.DoubleSide});
         bufferGeometry.translate(-avgX, -avgY, -avgZ);
+        bufferGeometry.computeVertexNormals();
         const terrainMesh = new THREE.Mesh(bufferGeometry, material);
         terrainMesh.rotation.x = -Math.PI / 2;
         scene.add(terrainMesh);
 
         // Lights
-        const light = new THREE.DirectionalLight(0xffffff, 1);
-        light.position.set(10, 10, 10).normalize();
-        scene.add(light);
-
         const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
         scene.add(ambientLight);
+        
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 5);
+        directionalLight.position.set(0, 500, 500); // Position above and slightly in front
+        directionalLight.castShadow = true;
+        scene.add(directionalLight);
+
 
         // 🔹 OrbitControls for navigation
         const controls = new OrbitControls(camera, renderer.domElement);
+        controls.rotateSpeed = 0.5
         controls.enableDamping = true;
         controls.dampingFactor = 0.1;
         controls.enableZoom = true;
         controls.minDistance = 10;  // Allow very close zoom
-        controls.maxDistance = distance * 2; // Limit zoom-out
+        const distance = Math.max(width, height) * 1.1; // Dynamic distance
+        controls.maxDistance = distance * 3; // Limit zoom-out
         controls.enablePan = true;
         controls.target.set(0, 0, 0);
         controls.update();
+
+        // RayCaster
+        
 
         // Render loop
         const animate = () => 
