@@ -7,7 +7,7 @@ const TerrainViewer = ({ elevationData, planeSize }) =>
 {
     const mountRef = useRef(null);
 
-    useEffect(() => 
+    useEffect(() => //master branch
     {
         if (!elevationData) return;
 
