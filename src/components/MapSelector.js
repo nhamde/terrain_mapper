@@ -1,14 +1,18 @@
-import React, { useState, useRef } from "react";
+import React, {useRef} from "react";
+import {useSelector, useDispatch} from 'react-redux';
 import { GoogleMap, LoadScript, Rectangle } from "@react-google-maps/api";
 import { REACT_APP_GOOGLE_MAPS_API_KEY } from "../ApiKey";
 import { calculatePlaneSize } from "./Functionality";
+import { setAreaSelection } from "../store/slices/AreaSelectionSlice";
+import { setPlaneSize } from "../store/slices/PlaneSizeSlice";
 
 const libraries = ["drawing"]; // Load drawing tools
 
-const MapSelector = ({ onAreaSelect, setPlaneSize}) => 
+const MapSelector = ({ onAreaSelect}) => 
 {
     const mapRef = useRef(null);
-    const [selection, setSelection] = useState(null);
+    const selection = useSelector((state)=> state.areaSelector);
+    const dispatch = useDispatch();
 
     const handleLoad = (map) => 
     {
@@ -52,8 +56,8 @@ const MapSelector = ({ onAreaSelect, setPlaneSize}) =>
         console.log("SelectedArea: ",selectedArea)
 
         const {width, height} = calculatePlaneSize(selectedArea.north, selectedArea.south, selectedArea.east, selectedArea.west);
-        setPlaneSize({width, height});
-        setSelection(selectedArea);
+        dispatch(setPlaneSize({width, height}));
+        dispatch(setAreaSelection(selectedArea));
         onAreaSelect(selectedArea);
     });
   };
@@ -62,7 +66,7 @@ const MapSelector = ({ onAreaSelect, setPlaneSize}) =>
     <LoadScript googleMapsApiKey={REACT_APP_GOOGLE_MAPS_API_KEY} libraries={libraries}>
       <GoogleMap
         mapContainerStyle={{ width: "50vw", height: "50vh" }}
-        center={{ lat: 30.734627, lng: 79.066895 }} // Default to San Francisco
+        center={{ lat: 30.734627, lng: 79.066895 }}
         zoom={20}
         onLoad={handleLoad}
       >

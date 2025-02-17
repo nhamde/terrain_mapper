@@ -2,22 +2,24 @@ import React, { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import  {SurfaceExtruder}  from "./SurfaceExtruder";
+import { useSelector } from "react-redux";
 
-const TerrainViewer = ({ elevationData, planeSize }) => 
+const TerrainViewer = () => 
 {
     const mountRef = useRef(null);
-
+    const elevation = useSelector((state)=> state.elevationDataSetter);
+    const planeSize = useSelector((state) => state.planeSizeSetter);
     useEffect(() => 
     {
-        if (!elevationData) return;
+        if (!elevation.elevationData) return;
 
-        const { results: elevations, gridX, gridY } = elevationData;
+        const { elevationData, gridX, gridY } = elevation;
         const width = planeSize.width;
         const height = planeSize.height;
 
-        if (elevations.length !== gridX * gridY) 
+        if (elevationData.length !== gridX * gridY) 
         {
-            console.error(`Elevation data length mismatch: Expected ${gridX * gridY}, got ${elevations.length}`);
+            console.error(`Elevation data length mismatch: Expected ${gridX * gridY}, got ${elevationData.length}`);
             return;
         }
 
@@ -40,7 +42,7 @@ const TerrainViewer = ({ elevationData, planeSize }) =>
             for (let x = 0; x < gridX; x++) 
             {
                 const elevationIndex = y * gridX + x; 
-                const elevationValue = elevations[elevationIndex] || 0; 
+                const elevationValue = elevationData[elevationIndex] || 0; 
 
                 const vertexIndex = (y * gridX + x) * 3;
                 vertices[vertexIndex + 2] = elevationValue; // Set elevation (Z)
@@ -56,7 +58,6 @@ const TerrainViewer = ({ elevationData, planeSize }) =>
         const avgX = sumX / numVertices;
         const avgY = sumY / numVertices;
         const avgZ = sumZ / numVertices;
-        console.log(`Center Vertex: (${avgX}, ${avgY}, ${avgZ})`);
 
         // Camera setup based on the center vertex
         const camera = new THREE.PerspectiveCamera(60, 1, 1, 5000);
@@ -117,7 +118,7 @@ const TerrainViewer = ({ elevationData, planeSize }) =>
         animate();
 
         return () => mountRef.current.removeChild(renderer.domElement);
-    }, [elevationData, planeSize]);
+    }, [elevation, planeSize]);
 
     return <div ref={mountRef} />;
 };

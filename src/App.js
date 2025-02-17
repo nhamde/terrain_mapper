@@ -1,6 +1,8 @@
-import React, { useState } from "react";
+import React from "react";
 import MapSelector from "./components/MapSelector";
 import TerrainViewer from "./components/TerrainViewer";
+import {useDispatch} from 'react-redux';
+import { setElevationData } from "./store/slices/ElevationDataSlice";
 
 const fetchElevationData = async (selectedArea) => 
   {
@@ -47,22 +49,21 @@ const fetchElevationData = async (selectedArea) =>
 
 function App() 
 {
-  const [elevationData, setElevationData] = useState(null);
-  const [planeSize, setPlaneSize] = useState({});
+  const dispatch = useDispatch();
 
   const handleAreaSelect = async (selectedArea) => 
   {
     const elevations = await fetchElevationData(selectedArea);
-    setElevationData(elevations); // Pass grid size
+    dispatch(setElevationData(elevations));
   };
 
   return (
     <div style={{ display: "flex", flexDirection: "column", width: "100vw", height: "100vh" }}>
       <div style={{ flex: 1, minHeight: "50%" }}>
-        <MapSelector onAreaSelect={handleAreaSelect} setPlaneSize={setPlaneSize}/>
+        <MapSelector onAreaSelect={handleAreaSelect}/>
       </div>
       <div style={{ flex: 2, height: "50%" }}>
-        {elevationData && <TerrainViewer elevationData={elevationData} planeSize={planeSize}/>}
+        {<TerrainViewer/>}
       </div>
     </div>
   );
