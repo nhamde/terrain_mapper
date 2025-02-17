@@ -3,7 +3,7 @@ import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import  {SurfaceExtruder}  from "./SurfaceExtruder";
 
-const TerrainViewer = ({ elevationData, planeSize, center }) => 
+const TerrainViewer = ({ elevationData, planeSize }) => 
 {
     const mountRef = useRef(null);
 
@@ -63,7 +63,7 @@ const TerrainViewer = ({ elevationData, planeSize, center }) =>
         camera.position.set(0, 0, 3500); 
         camera.lookAt(avgX, avgY, avgZ); 
 
-        const minZ = 3540;
+        const minZ = 3480;
         const {finalVertices, finalIndices} = SurfaceExtruder(vertices, minZ, gridX, gridY);
 
         const bufferGeometry = new THREE.BufferGeometry();
@@ -88,7 +88,6 @@ const TerrainViewer = ({ elevationData, planeSize, center }) =>
         directionalLight.castShadow = true;
         scene.add(directionalLight);
 
-
         // 🔹 OrbitControls for navigation
         const controls = new OrbitControls(camera, renderer.domElement);
         controls.rotateSpeed = 0.5
@@ -103,6 +102,9 @@ const TerrainViewer = ({ elevationData, planeSize, center }) =>
         controls.update();
 
         // RayCaster
+        const rayCaster = new THREE.Raycaster();
+        const pointer = new THREE.Vector2();
+
         
 
         // Render loop

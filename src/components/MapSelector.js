@@ -1,11 +1,11 @@
 import React, { useState, useRef } from "react";
 import { GoogleMap, LoadScript, Rectangle } from "@react-google-maps/api";
-import { REACT_APP_GOOGLE_MAPS_API_KEY } from "./ApiKey";
+import { REACT_APP_GOOGLE_MAPS_API_KEY } from "../ApiKey";
 import { calculatePlaneSize } from "./Functionality";
 
 const libraries = ["drawing"]; // Load drawing tools
 
-const MapSelector = ({ onAreaSelect, setPlaneSize, setCenter }) => 
+const MapSelector = ({ onAreaSelect, setPlaneSize}) => 
 {
     const mapRef = useRef(null);
     const [selection, setSelection] = useState(null);
@@ -53,7 +53,6 @@ const MapSelector = ({ onAreaSelect, setPlaneSize, setCenter }) =>
 
         const {width, height} = calculatePlaneSize(selectedArea.north, selectedArea.south, selectedArea.east, selectedArea.west);
         setPlaneSize({width, height});
-        setCenter({lat:(selectedArea.north+selectedArea.south)/2, lng:(selectedArea.east+selectedArea.west)/2});
         setSelection(selectedArea);
         onAreaSelect(selectedArea);
     });

@@ -49,7 +49,6 @@ function App()
 {
   const [elevationData, setElevationData] = useState(null);
   const [planeSize, setPlaneSize] = useState({});
-  const [center, setCenter] = useState({});
 
   const handleAreaSelect = async (selectedArea) => 
   {
@@ -60,10 +59,10 @@ function App()
   return (
     <div style={{ display: "flex", flexDirection: "column", width: "100vw", height: "100vh" }}>
       <div style={{ flex: 1, minHeight: "50%" }}>
-        <MapSelector onAreaSelect={handleAreaSelect} setPlaneSize={setPlaneSize} setCenter={setCenter} />
+        <MapSelector onAreaSelect={handleAreaSelect} setPlaneSize={setPlaneSize}/>
       </div>
       <div style={{ flex: 2, height: "50%" }}>
-        {elevationData && <TerrainViewer elevationData={elevationData} planeSize={planeSize} center={center} />}
+        {elevationData && <TerrainViewer elevationData={elevationData} planeSize={planeSize}/>}
       </div>
     </div>
   );
