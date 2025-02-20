@@ -6,39 +6,21 @@ const PondModel = ({ scene }) => {
     const [length, setLength] = useState(200);
     const [width, setWidth] = useState(200);
     const [hwl, setHwl] = useState(50);
-    const [nwl, setNwl] = useState(10);
+    const [nwl, setNwl] = useState(30);
+    const [safetyLedge, setSafetyLedge] = useState(10);
+    const [safetyLedgeLength, setSafetyLedgeLength] = useState(10);
+    const [overBoarding, setOverBoarding] = useState(70);
     const [interiorSlope, setInteriorSlope] = useState(1);
+    const [bottomSlope, setBottomSlope] = useState(0.5);
 
     useEffect(() => {
         if (!scene) return;
 
-        // Remove previous pond if exists
         if (pondRef.current) {
             pondRef.current.forEach(mesh => scene.remove(mesh));
         }
 
-        // HWL (High Water Level) corners
-        const fl_hwl = new THREE.Vector3(-length / 2, -width / 2, hwl);
-        const fr_hwl = new THREE.Vector3(length / 2, -width / 2, hwl);
-        const bl_hwl = new THREE.Vector3(-length / 2, width / 2, hwl);
-        const br_hwl = new THREE.Vector3(length / 2, width / 2, hwl);
-
-        // NWL (Normal Water Level) corners
-        const nwlLength = length - 2 * (hwl - nwl) / interiorSlope;
-        const nwlWidth = width - 2 * (hwl - nwl) / interiorSlope;
-        const fl_nwl = new THREE.Vector3(-nwlLength / 2, -nwlWidth / 2, nwl);
-        const fr_nwl = new THREE.Vector3(nwlLength / 2, -nwlWidth / 2, nwl);
-        const bl_nwl = new THREE.Vector3(-nwlLength / 2, nwlWidth / 2, nwl);
-        const br_nwl = new THREE.Vector3(nwlLength / 2, nwlWidth / 2, nwl);
-
-        const material = new THREE.MeshStandardMaterial({
-            color: 0x88cc88,
-            roughness: 0.5,
-            side: THREE.DoubleSide
-        });
-
-        // Function to create a face
-        const createFace = (v1, v2, v3, v4) => {
+        const createFace = (v1, v2, v3, v4, color) => {
             const geometry = new THREE.BufferGeometry();
             const vertices = new Float32Array([
                 v1.x, v1.y, v1.z,
@@ -53,30 +35,44 @@ const PondModel = ({ scene }) => {
             geometry.setIndex(indices);
             geometry.setAttribute("position", new THREE.Float32BufferAttribute(vertices, 3));
             geometry.computeVertexNormals();
-            return new THREE.Mesh(geometry, material);
+            return new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({ color, roughness: 0.5, side: THREE.DoubleSide }));
         };
 
-        // Create all pond faces
-        const frontFace = createFace(fl_hwl, fr_hwl, fl_nwl, fr_nwl);
-        const backFace = createFace(bl_hwl, br_hwl, bl_nwl, br_nwl);
-        const leftFace = createFace(fl_hwl, bl_hwl, fl_nwl, bl_nwl);
-        const rightFace = createFace(fr_hwl, br_hwl, fr_nwl, br_nwl);
-        const bottomFace = createFace(fl_nwl, fr_nwl, bl_nwl, br_nwl);
-
-        // Group all pond parts
+        const levels = [overBoarding, hwl, nwl, safetyLedge];
+        const colors = [0x88cc88, 0x77bb77, 0x66aa66, 0x559955];
         const pondGroup = new THREE.Group();
-        pondGroup.add(frontFace, backFace, leftFace, rightFace, bottomFace);
 
-        // Apply rotation around the X-axis (-90° to align properly)
+        for (let i = 0; i < levels.length - 1; i++) {
+            const topZ = levels[i];
+            const bottomZ = levels[i + 1];
+            const topLength = length - 2 * (overBoarding - topZ) / interiorSlope;
+            const topWidth = width - 2 * (overBoarding - topZ) / interiorSlope;
+            const bottomLength = length - 2 * (overBoarding - bottomZ) / interiorSlope;
+            const bottomWidth = width - 2 * (overBoarding - bottomZ) / interiorSlope;
+
+            const fl_top = new THREE.Vector3(-topLength / 2, -topWidth / 2, topZ);
+            const fr_top = new THREE.Vector3(topLength / 2, -topWidth / 2, topZ);
+            const bl_top = new THREE.Vector3(-topLength / 2, topWidth / 2, topZ);
+            const br_top = new THREE.Vector3(topLength / 2, topWidth / 2, topZ);
+
+            const fl_bottom = new THREE.Vector3(-bottomLength / 2, -bottomWidth / 2, bottomZ);
+            const fr_bottom = new THREE.Vector3(bottomLength / 2, -bottomWidth / 2, bottomZ);
+            const bl_bottom = new THREE.Vector3(-bottomLength / 2, bottomWidth / 2, bottomZ);
+            const br_bottom = new THREE.Vector3(bottomLength / 2, bottomWidth / 2, bottomZ);
+
+            const color = colors[i];
+            pondGroup.add(createFace(fl_top, fr_top, fl_bottom, fr_bottom, color));
+            pondGroup.add(createFace(bl_top, br_top, bl_bottom, br_bottom, color));
+            pondGroup.add(createFace(fl_top, bl_top, fl_bottom, bl_bottom, color));
+            pondGroup.add(createFace(fr_top, br_top, fr_bottom, br_bottom, color));
+        }
+
+        
+
         pondGroup.rotation.x = -Math.PI / 2;
-
-        // Add to scene
         scene.add(pondGroup);
-
-        // Store reference to remove later
         pondRef.current = [pondGroup];
-
-    }, [length, width, hwl, nwl, interiorSlope, scene]);
+    }, [length, width, overBoarding, hwl, nwl, safetyLedge, safetyLedgeLength, interiorSlope, bottomSlope, scene]);
 
     return (
         <div>
@@ -84,7 +80,11 @@ const PondModel = ({ scene }) => {
             <label>Width: <input type="number" value={width} onChange={(e) => setWidth(parseFloat(e.target.value))} /></label>
             <label>HWL: <input type="number" value={hwl} onChange={(e) => setHwl(parseFloat(e.target.value))} /></label>
             <label>NWL: <input type="number" value={nwl} onChange={(e) => setNwl(parseFloat(e.target.value))} /></label>
+            <label>Safety Ledge: <input type="number" value={safetyLedge} onChange={(e) => setSafetyLedge(parseFloat(e.target.value))} /></label>
+            <label>Safety Ledge Length: <input type="number" value={safetyLedgeLength} onChange={(e) => setSafetyLedgeLength(parseFloat(e.target.value))} /></label>
+            <label>Overboarding: <input type="number" value={overBoarding} onChange={(e) => setOverBoarding(parseFloat(e.target.value))} /></label>
             <label>Interior Slope: <input type="number" value={interiorSlope} onChange={(e) => setInteriorSlope(parseFloat(e.target.value))} /></label>
+            <label>Bottom Slope: <input type="number" value={bottomSlope} onChange={(e) => setBottomSlope(parseFloat(e.target.value))} /></label>
         </div>
     );
 };
